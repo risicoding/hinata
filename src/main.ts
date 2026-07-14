@@ -1,9 +1,10 @@
 #!/bin/env node
 import { initServer } from "./server.js";
 import { program as p } from "commander";
-import { Store } from "./store.js";
-import { logger } from "./logger.js";
+import { Store } from "./lib/store.js";
+import { logger } from "./lib/logger.js";
 import { scanNetwork } from "./client.js";
+import { startDaemon, stopDaemon } from "./daemon.js";
 
 const main = async () => {
   await Store.init().match(
@@ -44,21 +45,31 @@ const main = async () => {
     .command("start")
     .description("start the server")
     .action(async () => {
-      const data = await Store.read();
-      if (data.isErr()) {
-        data.error.log();
-        process.exit();
-      }
+      await Store.read().map((data) => {
+        if (!data) {
+          logger.error("required data not found");
+          return;
+        }
+        if (!Store.validateRequiredData(data)) {
+          logger.error("required data not found");
+          return;
+        }
 
-      if (!data.value) return;
-      const valid = Store.validateRequiredData(data.value);
-      if (!valid) {
-        logger.error("missing required data please set secret or device");
-        process.exit();
-      }
-
-      initServer(data.value.thisdevice);
+        initServer(data.thisdevice);
+      });
     });
+
+  const daemon = program.command("daemon").description("commands for daemon");
+
+  daemon
+    .command("start")
+    .description("start the server")
+    .action(async () => await startDaemon());
+
+  daemon
+    .command("stop")
+    .description("stop the daemon")
+    .action(async () => await stopDaemon());
 
   program
     .command("scan")

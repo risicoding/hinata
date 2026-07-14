@@ -9,6 +9,7 @@ export default {
 
   entry: {
     main: "./src/main.ts",
+    "start-server": "./src/start-server.ts",
   },
 
   output: {
@@ -19,7 +20,6 @@ export default {
       type: "module",
     },
     clean: true,
-    minify: false,
   },
 
   experiments: {

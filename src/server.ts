@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { scanNetwork } from "./client.js";
-import { logger } from "./logger.js";
+import { logger } from "./lib/logger.js";
 
 export type Device = {
   name: string;
@@ -32,6 +32,11 @@ export const initServer = (device: Device) => {
     return c.json({ status: "error" }, 500);
   });
 
+  app.get("/kill", () => {
+    logger.warn("Received kill command shutting down...");
+    process.exit();
+  });
+
   serve(
     {
       fetch: app.fetch,
@@ -39,4 +44,15 @@ export const initServer = (device: Device) => {
     },
     (i) => logger.info(`Server running on ${i.port}`),
   );
+
+  process.on("SIGTERM", () => {
+    console.log("Received SIGTERM. Shutting down...");
+    // Clean up here
+    process.exit(0);
+  });
+
+  process.on("SIGINT", () => {
+    console.log("Received SIGINT");
+    process.exit(0);
+  });
 };

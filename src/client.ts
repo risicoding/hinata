@@ -1,7 +1,7 @@
 import { err, ok, Result, ResultAsync } from "neverthrow";
-import { generateIpRange, getIp, IpError } from "./ip.js";
+import { generateIpRange, getIp, IpError } from "./lib/ip.js";
 import { PORT, type Response } from "./server.js";
-import { AppError } from "./error.js";
+import { AppError } from "./lib/error.js";
 
 class FetchError extends AppError {}
 class AuthenticationError extends AppError {}
