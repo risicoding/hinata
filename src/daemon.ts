@@ -4,6 +4,8 @@ import { logger } from "./lib/logger.js";
 import path from "path";
 import process from "process";
 import { PORT } from "./server.js";
+import { AppError } from "./lib/error.js";
+import { err, ok } from "neverthrow";
 
 const readPID = () => Store.read().map((data) => data?.pid);
 const savePID = (pid: number) => Store.write({ pid });
@@ -22,65 +24,69 @@ const isProcessRunning = (pid: number) => {
   }
 };
 
-export const startDaemon = () =>
-  readPID().match(
-    async (pid) => {
-      if (pid) {
-        if (isProcessRunning(pid)) {
-          logger.info(`hinata server already running on ${PORT}`);
-          return;
+export namespace Daemon {
+  export class DaemonError extends AppError {}
+  const readPID = () => Store.read().map((data) => data?.pid);
+  const savePID = (pid: number) => Store.write({ pid });
+  const purgePID = () => Store.write({ pid: undefined });
+
+  const isRunning = (pid: number) => {
+    try {
+      process.kill(pid, 0);
+      return true;
+    } catch (e) {
+      if (e instanceof Error) {
+        const code = (e as NodeJS.ErrnoException).code;
+        if (code === "ESRCH") return false;
+        if (code === "EPERM") return true;
+      }
+    }
+  };
+
+  export const status = () =>
+    readPID().map((pid) => {
+      if (!pid) return false;
+
+      if (isRunning(pid)) return true;
+      return false;
+    });
+
+  export const start = () =>
+    status()
+      .andThen((isRunning) => {
+        if (isRunning) {
+          logger.warn("hinata server already running");
+          return err(new DaemonError());
         }
-      }
+        const daemonPath = path.join(
+          path.dirname(process.argv[1]!),
+          "start-server.js",
+        );
 
-      const daemonPath = path.join(
-        path.dirname(process.argv[1]!),
-        "start-server.js",
-      );
+        const child = spawn(process.execPath, [daemonPath], {
+          detached: true,
+          stdio: "ignore",
+        });
 
-      const child = spawn(process.execPath, [daemonPath], {
-        detached: true,
-        stdio: "ignore",
-      });
+        child.unref();
 
-      child.unref();
+        if (!child.pid) return err(new DaemonError());
 
-      if (!child.pid) return;
+        return ok(child.pid);
+      })
+      .andThen(savePID);
 
-      await savePID(child.pid).match(
-        () => logger.info("Hinata server started"),
-        (e) => {
-          e.log();
-          process.exit();
-        },
-      );
-    },
-    (e) => {
-      e.log();
-      process.exit();
-    },
-  );
-
-export const stopDaemon = async () =>
-  await readPID().match(
-    async (pid) => {
-      if (!pid) {
-        logger.error("no running servers");
-        return;
-      }
-
-      if (!isProcessRunning(pid)) {
-        logger.error("no running servers");
-        return;
-      }
+  export const stop = () =>
+    readPID().andThen((pid) => {
+      if (!pid) return err(new DaemonError());
+      if (!isRunning(pid)) return err(new DaemonError());
 
       try {
-        process.kill(pid, "SIGTERM");
-      } catch (e) {}
-      logger.info("hinata server stopped");
-      await purgePID();
-    },
-    (e) => {
-      e.log();
-      process.exit();
-    },
-  );
+        process.kill(pid);
+      } catch (e) {
+        return err(new DaemonError("failed to stop daemon", e));
+      }
+
+      return ok();
+    });
+}

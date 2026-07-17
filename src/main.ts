@@ -4,7 +4,7 @@ import { program as p } from "commander";
 import { Store } from "./lib/store.js";
 import { logger } from "./lib/logger.js";
 import { scanNetwork } from "./client.js";
-import { startDaemon, stopDaemon } from "./daemon.js";
+import { Daemon } from "./daemon.js";
 
 const main = async () => {
   await Store.init().match(
@@ -64,17 +64,45 @@ const main = async () => {
   daemon
     .command("start")
     .description("start the server")
-    .action(async () => await startDaemon());
+    .action(async () => {
+      await Daemon.start().match(
+        () => logger.info("daemon started"),
+        (e) => e.log(),
+      );
+    });
 
   daemon
     .command("stop")
     .description("stop the daemon")
-    .action(async () => await stopDaemon());
+    .action(async () => {
+      await Daemon.stop().match(
+        () => logger.info("daemon stopped"),
+        (e) => {
+          e.log();
+        },
+      );
+    });
+
+  daemon
+    .command("status")
+    .description("check status of the daemon")
+    .action(async () => {
+      await Daemon.status().match(
+        (t) => {
+          if (t) {
+            logger.info("daemon running");
+          } else {
+            logger.info("daemon not running");
+          }
+        },
+        (e) => e.log(),
+      );
+    });
 
   program
     .command("scan")
     .description("scan the network")
-    .action(async (_) => {
+    .action(async () => {
       const res = await scanNetwork();
       if (res.isErr()) {
         res.error.log();
