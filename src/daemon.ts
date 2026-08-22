@@ -3,29 +3,13 @@ import { Store } from "./lib/store.js";
 import { logger } from "./lib/logger.js";
 import path from "path";
 import process from "process";
-import { PORT } from "./server.js";
 import { AppError } from "./lib/error.js";
 import { err, ok } from "neverthrow";
 
-const readPID = () => Store.read().map((data) => data?.pid);
-const savePID = (pid: number) => Store.write({ pid });
-const purgePID = () => Store.write({ pid: undefined });
-
-const isProcessRunning = (pid: number) => {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (e) {
-    if (e instanceof Error) {
-      const code = (e as NodeJS.ErrnoException).code;
-      if (code === "ESRCH") return false;
-      if (code === "EPERM") return true;
-    }
-  }
-};
-
 export namespace Daemon {
-  export class DaemonError extends AppError {}
+  export class DaemonError extends AppError {
+    public readonly tag = "DaemonError";
+  }
   const readPID = () => Store.read().map((data) => data?.pid);
   const savePID = (pid: number) => Store.write({ pid });
   const purgePID = () => Store.write({ pid: undefined });
@@ -77,16 +61,18 @@ export namespace Daemon {
       .andThen(savePID);
 
   export const stop = () =>
-    readPID().andThen((pid) => {
-      if (!pid) return err(new DaemonError());
-      if (!isRunning(pid)) return err(new DaemonError());
+    readPID()
+      .andThen((pid) => {
+        if (!pid) return err(new DaemonError());
+        if (!isRunning(pid)) return err(new DaemonError());
 
-      try {
-        process.kill(pid);
-      } catch (e) {
-        return err(new DaemonError("failed to stop daemon", e));
-      }
+        try {
+          process.kill(pid);
+        } catch (e) {
+          return err(new DaemonError("failed to stop daemon", e));
+        }
 
-      return ok();
-    });
+        return ok();
+      })
+      .andThen(purgePID);
 }

@@ -3,8 +3,12 @@ import { generateIpRange, getIp, IpError } from "./lib/ip.js";
 import { PORT, type Response } from "./server.js";
 import { AppError } from "./lib/error.js";
 
-class FetchError extends AppError {}
-class AuthenticationError extends AppError {}
+class FetchError extends AppError {
+  public readonly tag = "FetchError";
+}
+class AuthenticationError extends AppError {
+  public readonly tag = "AuthenticationError";
+}
 
 const connect = (ip: string) =>
   ResultAsync.fromPromise(

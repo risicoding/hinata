@@ -101,13 +101,41 @@ const main = async () => {
 
   program
     .command("scan")
+    .option("-c, --cache", "cache hit")
     .description("scan the network")
-    .action(async () => {
+    .action(async (args) => {
+      console.log("args", args);
+      const cache = (args.cache as boolean) ?? false;
+      const storeRes = await Store.read();
+
+      if (storeRes.isErr()) {
+        storeRes.error.log();
+        process.exit();
+      }
+
+      const { knownDevices, lastScan } = storeRes.value!;
+
+      const now = new Date();
+      const lastScanTime = new Date(lastScan);
+
+      const diffMinutes =
+        (now.getTime() - lastScanTime.getTime()) / (1000 * 60);
+
+      if (cache && diffMinutes > 5 && knownDevices.length != 0) {
+        console.log(knownDevices);
+        return;
+      }
+
       const res = await scanNetwork();
       if (res.isErr()) {
         res.error.log();
         process.exit();
       }
+
+      await Store.write({
+        knownDevices: res.value.map((v) => v.device),
+        lastScan: now,
+      });
 
       console.log(res.value);
     });

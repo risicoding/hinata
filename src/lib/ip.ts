@@ -2,7 +2,9 @@ import { ResultAsync } from "neverthrow";
 import dgram from "node:dgram";
 import { AppError } from "./error.js";
 
-export class IpError extends AppError {}
+export class IpError extends AppError {
+  public readonly tag = "IpError";
+}
 
 export const getIp = () =>
   ResultAsync.fromPromise(
@@ -24,7 +26,7 @@ export const getIp = () =>
 export const generateIpRange = (ip: string) => {
   const parts = ip.split(".");
 
-  const own = Number(parts.pop());
+  // const own = Number(parts.pop());
   const prefix = parts.join(".");
 
   return (

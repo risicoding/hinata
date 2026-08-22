@@ -9,13 +9,16 @@ const storeDirPath = path.join(os.homedir(), ".local", "share", "hinata");
 const storeFilePath = path.join(storeDirPath, "store.json");
 
 export namespace Store {
-  export class StoreError extends AppError {}
+  export class StoreError extends AppError {
+    public readonly tag = "StoreError";
+  }
 
   export type Data = {
     thisdevice: Device;
     knownDevices: Device[];
     secret: string;
     pid: number | undefined;
+    lastScan: Date;
   };
 
   export const init = () =>
@@ -33,7 +36,9 @@ export namespace Store {
         ),
       );
 
-  export class JSONError extends AppError {}
+  export class JSONError extends AppError {
+    public tag = "JSONError";
+  }
   export const read = () =>
     FileSystem.safeReadFile(storeFilePath)
       .map((s) => s.toString())

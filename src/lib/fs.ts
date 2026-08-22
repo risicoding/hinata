@@ -3,7 +3,9 @@ import fs from "fs/promises";
 import { AppError } from "./error.js";
 
 export namespace FileSystem {
-  export class FilesystemError extends AppError {}
+  export class FilesystemError extends AppError {
+    public readonly tag = "FilesystemError";
+  }
 
   export const safeMkdir = ResultAsync.fromThrowable(
     fs.mkdir,

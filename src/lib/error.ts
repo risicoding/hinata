@@ -1,6 +1,6 @@
 import { logger } from "./logger.js";
 export class AppError {
-  tag: string;
+  tag?: string;
   error?: Error;
   meta?: any;
   constructor(
@@ -12,10 +12,6 @@ export class AppError {
       this.error = err;
     }
     if (meta) this.meta = meta;
-
-    Object.setPrototypeOf(this, new.target.prototype);
-
-    this.tag = new.target.name;
   }
 
   public log(msg?: string) {
