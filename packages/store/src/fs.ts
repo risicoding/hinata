@@ -1,6 +1,6 @@
 import { ResultAsync } from "neverthrow";
 import fs from "fs/promises";
-import { AppError } from "./error.js";
+import { AppError } from "@hinata/error";
 
 export namespace FileSystem {
   export class FilesystemError extends AppError {

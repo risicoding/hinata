@@ -1,6 +1,6 @@
-import { initServer } from "./server.js";
-import { Store } from "./lib/store.js";
-import { logger } from "./lib/logger.js";
+import { initServer } from "@hinata/server";
+import { Store } from "@hinata/store";
+import { logger } from "@hinata/logger";
 
 Store.read()
   .map((data) => {
@@ -18,8 +18,8 @@ Store.read()
   .match(
     () => null,
     (e) => {
-      e.log();
-      process.exit();
+      logger.error(e.log);
+      logger.debug(e);
     },
   )
   .then(() => null);

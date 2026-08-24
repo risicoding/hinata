@@ -1,6 +1,6 @@
 import { ResultAsync } from "neverthrow";
 import dgram from "node:dgram";
-import { AppError } from "./error.js";
+import { AppError } from "@hinata/error";
 
 export class IpError extends AppError {
   public readonly tag = "IpError";
@@ -26,7 +26,7 @@ export const getIp = () =>
 export const generateIpRange = (ip: string) => {
   const parts = ip.split(".");
 
-  // const own = Number(parts.pop());
+  Number(parts.pop());
   const prefix = parts.join(".");
 
   return (

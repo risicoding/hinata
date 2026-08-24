@@ -27,6 +27,9 @@ export default {
   },
 
   resolve: {
+    alias: {
+      "@": new URL("./src", import.meta.url).pathname,
+    },
     extensions: [".ts", ".js"],
     extensionAlias: {
       ".js": [".ts", ".js"],
@@ -53,6 +56,6 @@ export default {
   },
 
   optimization: {
-    minimize: true,
+    minimize: false,
   },
 };

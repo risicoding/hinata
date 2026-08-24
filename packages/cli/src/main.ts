@@ -1,24 +1,24 @@
 #!/bin/env node
-import { initServer } from "./server.js";
+import { initServer } from "@hinata/server";
+import { scanNetwork } from "@hinata/server/client";
 import { program as p } from "commander";
-import { Store } from "./lib/store.js";
-import { logger } from "./lib/logger.js";
-import { scanNetwork } from "./client.js";
-import { Daemon } from "./daemon.js";
+import { Store } from "@hinata/store";
+import { logger } from "@hinata/logger";
+import { Daemon } from "@/daemon";
 
 const main = async () => {
   await Store.init().match(
     () => null,
     (e) => {
-      e.log();
-      process.exit();
+      logger.error(e.log());
+      logger.debug(e);
     },
   );
 
   const program = p
     .name("hinata")
     .description("discover other hinata servers running on lan")
-    .version("v0");
+    .version("v1.0.0");
 
   // program.command("set").command("secret <string>").description("set secret for authentication")
   program
@@ -33,9 +33,11 @@ const main = async () => {
       const res = await Store.write({
         thisdevice: { uname: deviceUname, name: deviceName },
       });
+
       if (res.isErr()) {
-        res.error.log();
-        process.exit();
+        logger.error(res.error.log());
+        logger.debug(res.error);
+        return;
       }
 
       logger.info("device set successfully");
@@ -67,7 +69,10 @@ const main = async () => {
     .action(async () => {
       await Daemon.start().match(
         () => logger.info("daemon started"),
-        (e) => e.log(),
+        (e) => {
+          logger.error(e.log());
+          logger.debug(e);
+        },
       );
     });
 
@@ -78,7 +83,7 @@ const main = async () => {
       await Daemon.stop().match(
         () => logger.info("daemon stopped"),
         (e) => {
-          e.log();
+          logger.error(e.log());
         },
       );
     });
@@ -95,47 +100,23 @@ const main = async () => {
             logger.info("daemon not running");
           }
         },
-        (e) => e.log(),
+        (e) => {
+          logger.error(e.log());
+          logger.debug(e);
+        },
       );
     });
 
   program
     .command("scan")
-    .option("-c, --cache", "cache hit")
     .description("scan the network")
-    .action(async (args) => {
-      console.log("args", args);
-      const cache = (args.cache as boolean) ?? false;
-      const storeRes = await Store.read();
-
-      if (storeRes.isErr()) {
-        storeRes.error.log();
-        process.exit();
-      }
-
-      const { knownDevices, lastScan } = storeRes.value!;
-
-      const now = new Date();
-      const lastScanTime = new Date(lastScan);
-
-      const diffMinutes =
-        (now.getTime() - lastScanTime.getTime()) / (1000 * 60);
-
-      if (cache && diffMinutes > 5 && knownDevices.length != 0) {
-        console.log(knownDevices);
-        return;
-      }
-
+    .action(async () => {
       const res = await scanNetwork();
       if (res.isErr()) {
-        res.error.log();
-        process.exit();
+        logger.error(res.error.log());
+        logger.debug(res.error);
+        return;
       }
-
-      await Store.write({
-        knownDevices: res.value.map((v) => v.device),
-        lastScan: now,
-      });
 
       console.log(res.value);
     });

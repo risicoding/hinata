@@ -1,4 +1,3 @@
-import { logger } from "./logger.js";
 export class AppError {
   tag?: string;
   error?: Error;
@@ -11,11 +10,9 @@ export class AppError {
     if (err && err instanceof Error) {
       this.error = err;
     }
+
     if (meta) this.meta = meta;
   }
 
-  public log(msg?: string) {
-    logger.error(`${this.tag} ${this.message}${msg ? ` ${msg}` : ""}`);
-    logger.debug(this.error);
-  }
+  public log = () => `${this.tag} ${this.message}`;
 }

@@ -1,0 +1,12 @@
+{
+  "extends": "@hinata/typescript-config/base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src/**/*", "tests/**/*"]
+}

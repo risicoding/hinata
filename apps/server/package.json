@@ -1,0 +1,24 @@
+{
+  "name": "@hinata/server",
+  "type": "module",
+  "version": "1.0.1",
+  "description": "",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.32.1",
+  "devDependencies": {
+    "@hinata/typescript-config": "workspace:*",
+    "@hinata/error": "workspace:*",
+    "@hinata/logger": "workspace:*",
+    "@hinata/store": "workspace:*",
+    "@hono/node-server": "^2.0.8",
+    "commander": "^15.0.0",
+    "hono": "^4.12.27",
+    "winston": "^3.19.0"
+  }
+}

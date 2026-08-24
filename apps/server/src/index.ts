@@ -1,12 +1,8 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { scanNetwork } from "./client.js";
-import { logger } from "./lib/logger.js";
-
-export type Device = {
-  name: string;
-  uname: string;
-};
+import { logger } from "@hinata/logger";
+import { type Device } from "@hinata/store";
 
 export const PORT = 6745;
 

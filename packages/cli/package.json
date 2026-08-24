@@ -1,0 +1,19 @@
+{
+  "name": "@hinata/cli",
+  "version": "v1.0.0",
+  "type": "module",
+  "bin": {
+    "hinata": "build/main.js"
+  },
+  "scripts": {
+    "build": "rspack build"
+  },
+  "devDependencies": {
+    "@hinata/store": "workspace:*",
+    "@hinata/error": "workspace:*",
+    "@hinata/logger": "workspace:*",
+    "@hinata/server": "workspace:*",
+    "@hinata/typescript-config": "workspace:*",
+    "commander": "^15.0.0"
+  }
+}
