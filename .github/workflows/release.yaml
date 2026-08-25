@@ -38,7 +38,7 @@ jobs:
       - name: Build CLI
         run: pnpm --filter @hinata/cli build
 
-      - name: Pac CLI
+      - name: Pack CLI
         run: pnpm --filter @hinata/cli pack --pack-destination ./release
 
       - name: Create Github release
