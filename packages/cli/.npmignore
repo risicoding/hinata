@@ -1,3 +1,4 @@
+*.logs/
 src/
 tsconfig.json
 rspack.config.mjs

@@ -1,6 +1,6 @@
 {
   "name": "hinata",
-  "version": "1.0.0",
+  "version": "1.2.1",
   "scripts": {},
   "packageManager": "pnpm@10.34.5",
   "devDependencies": {

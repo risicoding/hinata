@@ -18,7 +18,7 @@ const main = async () => {
   const program = p
     .name("hinata")
     .description("discover other hinata servers running on lan")
-    .version("v1.1.0");
+    .version("v1.2.1");
 
   // program.command("set").command("secret <string>").description("set secret for authentication")
   program

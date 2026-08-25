@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-import { getDevices, revalidate, updateCache } from "./client.js";
+import { getDevices, revalidate, scanNetwork, updateCache } from "./client.js";
 import { logger } from "@hinata/logger";
 import type { Device, DeviceWithIP } from "@hinata/store";
 import { getIp } from "./lib/ip.js";
@@ -37,6 +37,14 @@ export const initServer = async (device: Device) => {
     await updateCache();
 
     return c.json({ success: "true", message: "cache updated" });
+  });
+
+  app.get("/scan", async (c) => {
+    const res = await scanNetwork();
+    if (res.isErr())
+      return c.json({ status: "error", message: "cant scan" }, 500);
+
+    return c.json(res);
   });
 
   app.get("/kill", () => {
