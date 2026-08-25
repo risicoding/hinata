@@ -1,31 +1,42 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-import { scanNetwork } from "./client.js";
+import { getDevices, revalidate, updateCache } from "./client.js";
 import { logger } from "@hinata/logger";
-import { type Device } from "@hinata/store";
+import type { Device, DeviceWithIP } from "@hinata/store";
+import { getIp } from "./lib/ip.js";
 
 export const PORT = 6745;
 
 export type Response = {
   name: "hinata";
-  device: Device;
+  device: DeviceWithIP;
   status: "Running";
+  ip: string;
 };
 
-export const initServer = (device: Device) => {
+export const initServer = async (device: Device) => {
   const app = new Hono();
 
+  void revalidate();
+
   app.get("/", async (c) => {
-    return c.json({ name: "hinata", device, status: "running" });
+    const ip = await getIp();
+    if (ip.isErr()) {
+      return c.json({ status: "error", message: "cant find ip" }, 500);
+    }
+    const deviceWithIP = { ...device, ip: ip.value } as DeviceWithIP;
+    return c.json({ name: "hinata", device: deviceWithIP, status: "running" });
   });
 
   app.get("/devices", async (c) => {
-    const res = await scanNetwork();
-    if (res.isOk()) {
-      return c.json(res.value);
-    }
+    const res = await getDevices();
+    return c.json(res);
+  });
 
-    return c.json({ status: "error" }, 500);
+  app.get("/revalidate", async (c) => {
+    await updateCache();
+
+    return c.json({ success: "true", message: "cache updated" });
   });
 
   app.get("/kill", () => {

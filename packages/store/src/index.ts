@@ -12,6 +12,10 @@ export type Device = {
   uname: string;
 };
 
+export type DeviceWithIP = Device & { ip: string };
+
+export type DeviceWithSelf = DeviceWithIP & { self: true };
+
 export namespace Store {
   export class StoreError extends AppError {
     public readonly tag = "StoreError";

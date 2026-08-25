@@ -1,6 +1,6 @@
 {
   "name": "@hinata/cli",
-  "version": "v1.0.0",
+  "version": "v1.1.0",
   "type": "module",
   "bin": {
     "hinata": "build/main.js"

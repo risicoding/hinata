@@ -1,8 +1,8 @@
-import { err, ok, ResultAsync } from "neverthrow";
-import { generateIpRange, getIp } from "./lib/ip";
+import { err, ok, Result, ResultAsync } from "neverthrow";
+import { generateIpRange, getIp, IpError } from "./lib/ip";
 import { PORT, type Response } from "./index";
 import { AppError } from "@hinata/error";
-import { logger } from "@hinata/logger";
+import type { DeviceWithSelf } from "@hinata/store";
 
 class FetchError extends AppError {
   public readonly tag = "FetchError";
@@ -28,30 +28,56 @@ export const connect = (ip: string) =>
           ),
     );
 
-export const scanNetwork = () =>
-  getIp()
-    .map(generateIpRange)
-    .map(async (ips) => await Promise.all(ips.map(connect)))
-    .map((result) => result.filter((r) => r.isOk()).map((r) => r.value));
+export const scanNetwork = async (): Promise<
+  Result<DeviceWithSelf[], IpError>
+> => {
+  const ip = await getIp();
+  if (ip.isErr()) return err(ip.error);
 
-// async function main() {
-//   console.time("getIp");
-//   const ip = await getIp();
-//   if (ip.isErr()) return err(ip.error);
-//   console.timeEnd("getIp");
-//
-//   console.time("generateIpRange");
-//   const ipRange = generateIpRange(ip.value);
-//   console.timeEnd("generateIpRange");
-//
-//   console.time("connnect");
-//   const res = await Promise.all(ipRange.map(connect));
-//   console.timeEnd("connnect");
-//
-//   res.forEach((v) => {
-//     if (v.isErr()) return;
-//     console.log(v);
-//   });
-// }
-//
-// main().then();
+  const ips = generateIpRange(ip.value);
+
+  const res = await Promise.all(ips.map(connect));
+
+  return ok(
+    res
+      .filter((v) => v.isOk())
+      .map(
+        (v) =>
+          ({
+            ...v.value.device,
+            self: v.value.ip === ip.value,
+          }) as DeviceWithSelf,
+      ),
+  );
+};
+
+const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
+let cache: DeviceWithSelf[];
+
+export const updateCache = async (): Promise<Result<void, IpError>> => {
+  const res = await scanNetwork();
+  if (res.isErr()) return err(res.error);
+
+  cache = res.value;
+
+  return ok();
+};
+
+export const revalidate = async () => {
+  await updateCache();
+  void (async () => {
+    while (true) {
+      const res = await updateCache();
+      if (res.isErr()) return err(res.error);
+      await sleep(60000);
+    }
+  })();
+};
+
+export const getDevices = async () => {
+  if (!cache) {
+    await updateCache();
+  }
+  return cache;
+};
