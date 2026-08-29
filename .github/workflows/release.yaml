@@ -46,6 +46,12 @@ jobs:
       - name: Pack CLI
         run: pnpm --filter @hinata/cli pack --pack-destination ./release
 
+      - name: Build API
+        run: pnpm --filter @hinata/api build
+
+      - name: Pack API
+        run: pnpm --filter @hinata/api pack --pack-destination ./release
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
