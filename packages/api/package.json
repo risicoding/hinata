@@ -1,0 +1,35 @@
+{
+  "name": "@hinata/api",
+  "type": "module",
+  "version": "v0.1.0",
+  "description": "API abstractions for hinata server",
+  "files": [
+    "build"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/risicoding/hinata.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "scripts": {
+    "build": "tsup",
+    "prepublishOnly": "pnpm build"
+  },
+  "devDependencies": {
+    "@hinata/error": "workspace:*",
+    "@hinata/server": "workspace:*",
+    "@hinata/store": "workspace:*",
+    "@hinata/typescript-config": "workspace:*",
+    "tsup": "^8.5.1"
+  }
+}

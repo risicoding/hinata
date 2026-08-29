@@ -7,7 +7,7 @@ export class IpError extends AppError {
   public readonly tag = "IpError";
 }
 
-export const getIp = () =>
+export const getIp = (): ResultAsync<string, IpError> =>
   ResultAsync.fromPromise(
     new Promise((resolve, reject) => {
       const interfaces = os.networkInterfaces();
