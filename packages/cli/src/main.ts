@@ -18,29 +18,53 @@ const main = async () => {
   const program = p
     .name("hinata")
     .description("discover other hinata servers running on lan")
-    .version("v1.2.1");
+    .version("v1.4.0");
 
   // program.command("set").command("secret <string>").description("set secret for authentication")
-  program
-    .command("set")
-    .description("set data for hinata")
-    .command("device <string>")
-    .description("set device name")
-    .action(async (arg: string) => {
-      const deviceName = arg;
-      const deviceUname = arg.toLowerCase().split(" ").join("");
 
-      const res = await Store.write({
-        thisdevice: { uname: deviceUname, name: deviceName },
-      });
+  const configCommand = program
+    .command("config")
+    .description("command for config data");
 
+  configCommand.command("set-device <string>").action(async (deviceName) => {
+    const deviceUname = deviceName.toLowerCase().split(" ").join("");
+
+    const res = await Store.write({
+      thisdevice: { uname: deviceUname, name: deviceName },
+    });
+
+    if (res.isErr()) {
+      logger.error(res.error.log());
+      logger.debug(res.error);
+      return;
+    }
+
+    logger.info("device set successfully");
+  });
+
+  configCommand
+    .command("get-device")
+    .option("-j, --json", "output data in json")
+    .action(async ({ json }) => {
+      const res = await Store.read();
       if (res.isErr()) {
         logger.error(res.error.log());
         logger.debug(res.error);
         return;
       }
 
-      logger.info("device set successfully");
+      if (!res.value?.thisdevice) {
+        logger.warn("Device not found");
+        return;
+      }
+
+      if (json) {
+        console.log(res.value.thisdevice);
+      } else {
+        console.log(
+          `NAME: ${res.value.thisdevice.name}\nUNAME: ${res.value.thisdevice.uname}`,
+        );
+      }
     });
 
   program

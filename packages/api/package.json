@@ -1,7 +1,7 @@
 {
   "name": "@hinata/api",
   "type": "module",
-  "version": "v0.1.0",
+  "version": "1.0.0",
   "description": "API abstractions for hinata server",
   "files": [
     "build"
